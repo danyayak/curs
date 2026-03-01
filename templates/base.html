@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Айдевайс - Технологии 2026{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    {% block head %}{% endblock %}
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="container nav-inner">
+            <a href="/" class="logo">Айдевайс</a>
+            
+            <div class="nav-search">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M11 19C15.4183 19 19 15.4183 19 11C19 6.58172 15.4183 3 11 3C6.58172 3 3 6.58172 3 11C3 15.4183 6.58172 19 11 19Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M21 21L16.65 16.65" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <input type="text" id="nav-search-input" placeholder="Поиск" onkeypress="handleSearchKey(event)">
+            </div>
+
+            <ul class="nav-menu">
+                <li><a href="/" class="nav-link">Главная</a></li>
+                <li><a href="/catalog" class="nav-link">Каталог</a></li>
+                {% if user %}
+                    <li><a href="/profile" class="nav-link">Профиль</a></li>
+                {% endif %}
+                <li><a href="#about" class="nav-link">О нас</a></li>
+            </ul>
+            
+            <div class="nav-icons">
+                {% if user %}
+                    <a href="/profile" title="Профиль">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12.1601 10.87C12.0601 10.86 11.9401 10.86 11.8301 10.87C9.45006 10.79 7.56006 8.84 7.56006 6.44C7.56006 3.99 9.54006 2 12.0001 2C14.4501 2 16.4401 3.99 16.4401 6.44C16.4301 8.84 14.5401 10.79 12.1601 10.87Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M7.15997 14.56C4.73997 16.18 4.73997 18.82 7.15997 20.43C9.90997 22.27 14.42 22.27 17.17 20.43C19.59 18.81 19.59 16.17 17.17 14.56C14.43 12.73 9.91997 12.73 7.15997 14.56Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </a>
+                {% else %}
+                    <button onclick="openModal('auth-modal')" title="Войти">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12.1601 10.87C12.0601 10.86 11.9401 10.86 11.8301 10.87C9.45006 10.79 7.56006 8.84 7.56006 6.44C7.56006 3.99 9.54006 2 12.0001 2C14.4501 2 16.4401 3.99 16.4401 6.44C16.4301 8.84 14.5401 10.79 12.1601 10.87Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M7.15997 14.56C4.73997 16.18 4.73997 18.82 7.15997 20.43C9.90997 22.27 14.42 22.27 17.17 20.43C19.59 18.81 19.59 16.17 17.17 14.56C14.43 12.73 9.91997 12.73 7.15997 14.56Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </button>
+                {% endif %}
+
+                <a href="/cart" style="position: relative; display: flex; align-items: center;">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M7.5 7.67001V6.70001C7.5 4.45001 9.31 2.24001 11.56 2.03001C14.24 1.77001 16.5 3.88001 16.5 6.51001V7.89001" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M9 22H15C19.02 22 19.74 20.39 19.95 18.43L20.7 13.43C20.97 11.05 20.27 9.12001 16 9.12001H8C3.73 9.12001 3.03 11.05 3.3 13.43L4.05 18.43C4.26 20.39 4.98 22 9 22Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    <span id="cart-count" class="cart-count">0</span>
+                </a>
+
+                <button id="theme-toggle" title="Сменить тему">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M12 18C15.3137 18 18 15.3137 18 12C18 8.68629 15.3137 6 12 6C8.68629 6 6 8.68629 6 12C6 15.3137 8.68629 18 12 18Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    {% block content %}{% endblock %}
+
+    <footer>
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-col">
+                    <h4>Магазин</h4>
+                    <ul>
+                        <li><a href="/catalog?category=laptop">MacBook 2026</a></li>
+                        <li><a href="/catalog?category=smartphone">iPhone 17</a></li>
+                        <li><a href="/catalog?category=watch">Watch Ultra 4</a></li>
+                        <li><a href="/catalog?category=gaming">PlayStation 6</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h4>Поддержка</h4>
+                    <ul>
+                        <li><a href="#">Связаться с нами</a></li>
+                        <li><a href="#">Статус заказа</a></li>
+                        <li><a href="#">Возврат</a></li>
+                        <li><a href="#">FAQ</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h4>Правовая информация</h4>
+                    <ul>
+                        <li><a href="#">Политика конфиденциальности</a></li>
+                        <li><a href="#">Условия использования</a></li>
+                        <li><a href="#">Политика продаж</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h4>О нас</h4>
+                    <ul>
+                        <li><a href="#">Новости 2026</a></li>
+                        <li><a href="#">Карьера</a></li>
+                        <li><a href="#">Инвесторам</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="copyright">
+                &copy; 2026 Айдевайс Inc. Все права защищены.
+            </div>
+        </div>
+    </footer>
+
+    <!-- Chat Widget -->
+    <div class="chat-widget-btn" id="chat-btn" onclick="toggleChat()">💬</div>
+    
+    <div class="chat-window" id="chat-window">
+        <div class="chat-header">
+            <span>AI Консультант</span>
+            <span style="cursor:pointer" onclick="toggleChat()">✕</span>
+        </div>
+        <div class="chat-messages" id="chat-messages">
+            <div class="msg bot">Привет! Я ваш виртуальный помощник. Могу подсказать лучший ноутбук или смартфон под ваши задачи. Просто спросите! 😊</div>
+        </div>
+        <div class="chat-input">
+            <input type="text" id="chat-input" placeholder="Ваше сообщение..." onkeypress="handleKey(event)">
+            <button onclick="sendMessage()">➤</button>
+        </div>
+    </div>
+
+    <!-- Auth Modal -->
+    <div class="modal-overlay" id="auth-modal">
+        <div class="modal">
+            <button class="modal-close" onclick="closeModal('auth-modal')">×</button>
+            <h2 id="auth-title">Вход</h2>
+            <div class="form-group">
+                <label>Имя пользователя</label>
+                <input type="text" id="auth-username">
+            </div>
+            <div class="form-group">
+                <label>Пароль</label>
+                <input type="password" id="auth-password">
+            </div>
+            <button class="modal-btn" onclick="handleAuth()">Войти</button>
+            <p style="text-align:center; margin-top:1rem; cursor:pointer; color:var(--accent)" onclick="toggleAuthMode()" id="auth-switch">Нет аккаунта? Зарегистрироваться</p>
+        </div>
+    </div>
+
+    <script>
+        const themeToggle = document.getElementById('theme-toggle');
+        const chatWindow = document.getElementById('chat-window');
+        const chatBtn = document.getElementById('chat-btn');
+        const chatMessages = document.getElementById('chat-messages');
+        const inputField = document.getElementById('chat-input');
+        const navSearchInput = document.getElementById('nav-search-input');
+        
+        let cart = JSON.parse(localStorage.getItem('cart') || '[]');
+        updateCartCount();
+        
+        let isRegistering = false;
+
+        // Theme Logic
+        let isDark = localStorage.getItem('theme') === 'dark';
+        if (isDark) document.body.classList.add('dark-mode');
+        
+        themeToggle.addEventListener('click', () => {
+            isDark = !isDark;
+            document.body.classList.toggle('dark-mode');
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        });
+
+        // Search Logic
+        function handleSearchKey(e) { if (e.key === 'Enter') sendNavSearch(); }
+
+        function sendNavSearch() {
+            const text = navSearchInput.value.trim();
+            if (!text) return;
+            // Redirect to catalog with search param
+            window.location.href = `/catalog?search=${encodeURIComponent(text)}`;
+        }
+
+        // Chat Logic
+        function toggleChat() {
+            const isOpen = chatWindow.classList.contains('open');
+            if (isOpen) {
+                chatWindow.classList.remove('open');
+                chatBtn.classList.remove('hidden');
+            } else {
+                chatWindow.classList.add('open');
+                chatBtn.classList.add('hidden');
+                inputField.focus();
+            }
+        }
+
+        function handleKey(e) { if (e.key === 'Enter') sendMessage(); }
+
+        async function sendMessage() {
+            const text = inputField.value.trim();
+            if (!text) return;
+            
+            // Save user message
+            saveMessage(text, 'user');
+            addMessage(text, 'user');
+            
+            inputField.value = '';
+            const loadingId = addMessage('Ищу лучшие варианты...', 'bot');
+            try {
+                const response = await fetch('/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: text })
+                });
+                const data = await response.json();
+                document.getElementById(loadingId).remove();
+                
+                // Save bot message
+                saveMessage(data.reply, 'bot');
+                addMessage(data.reply, 'bot');
+                
+                // Show product cards if available
+                if (data.products && data.products.length > 0) {
+                    saveProducts(data.products);
+                    renderProductCards(data.products);
+                }
+            } catch (error) {
+                if (document.getElementById(loadingId)) {
+                    document.getElementById(loadingId).innerText = "Произошла ошибка сети 😔";
+                }
+            }
+        }
+
+        function renderProductCards(products) {
+            const container = document.createElement('div');
+            container.className = 'chat-products';
+            
+            products.forEach(p => {
+                const card = document.createElement('div');
+                card.className = 'chat-product-card';
+                // Fix: link to product page by ID
+                card.onclick = () => window.location.href = `/product/${p.id}`;
+                
+                card.innerHTML = `
+                    <div class="chat-product-img">
+                        <img src="${p.image_url}" alt="${p.name}">
+                    </div>
+                    <div class="chat-product-info">
+                        <div class="name" title="${p.name}">${p.name}</div>
+                        <div class="price">${p.price.toLocaleString('ru-RU')} ₽</div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+            
+            chatMessages.appendChild(container);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function addMessage(text, type) {
+            const id = 'msg-' + Date.now();
+            const div = document.createElement('div');
+            div.id = id;
+            div.className = `msg ${type}`;
+            div.textContent = text;
+            chatMessages.appendChild(div);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            return id;
+        }
+        
+        // Chat History Persistence
+        function saveMessage(text, type) {
+            let history = JSON.parse(sessionStorage.getItem('chatHistory') || '[]');
+            history.push({type: 'msg', text: text, role: type});
+            sessionStorage.setItem('chatHistory', JSON.stringify(history));
+        }
+        
+        function saveProducts(products) {
+            let history = JSON.parse(sessionStorage.getItem('chatHistory') || '[]');
+            history.push({type: 'products', data: products});
+            sessionStorage.setItem('chatHistory', JSON.stringify(history));
+        }
+        
+        function loadChatHistory() {
+            const history = JSON.parse(sessionStorage.getItem('chatHistory') || '[]');
+            // Clear default welcome if history exists
+            if (history.length > 0) {
+                chatMessages.innerHTML = '';
+            }
+            
+            history.forEach(item => {
+                if (item.type === 'msg') {
+                    addMessage(item.text, item.role);
+                } else if (item.type === 'products') {
+                    renderProductCards(item.data);
+                }
+            });
+        }
+        
+        // Load history on init
+        loadChatHistory();
+
+        // Cart Logic
+        function addToCart(name, price) {
+            cart.push({name, price});
+            localStorage.setItem('cart', JSON.stringify(cart));
+            updateCartCount();
+            
+            // Visual feedback
+            const btn = event.target;
+            const originalText = btn.innerText;
+            btn.innerText = '✓';
+            btn.style.backgroundColor = '#10b981';
+            setTimeout(() => {
+                btn.innerText = originalText;
+                btn.style.backgroundColor = '';
+            }, 1000);
+        }
+
+        function updateCartCount() {
+            document.getElementById('cart-count').innerText = cart.length;
+        }
+
+        // Auth
+        function openModal(id) { document.getElementById(id).classList.add('open'); }
+        function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+        
+        function toggleAuthMode() {
+            isRegistering = !isRegistering;
+            document.getElementById('auth-title').innerText = isRegistering ? 'Регистрация' : 'Вход';
+            document.getElementById('auth-switch').innerText = isRegistering ? 'Уже есть аккаунт? Войти' : 'Нет аккаунта? Зарегистрироваться';
+        }
+
+        async function handleAuth() {
+            const username = document.getElementById('auth-username').value;
+            const password = document.getElementById('auth-password').value;
+            const endpoint = isRegistering ? '/api/register' : '/api/login';
+            
+            try {
+                const res = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({username, password})
+                });
+                const data = await res.json();
+                
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert(data.error);
+                }
+            } catch (e) {
+                alert('Ошибка соединения');
+            }
+        }
+        
+        function logout() {
+            fetch('/api/logout', {method: 'POST'}).then(() => location.href = '/');
+        }
+    </script>
+</body>
+</html>

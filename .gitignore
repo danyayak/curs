@@ -1,0 +1,42 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.python-version
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+dist/
+build/
+*.egg-info/
+
+# Environment variables
+.env
+.env.*
+.flaskenv
+
+# MacOS
+.DS_Store
+
+# IDEs
+.vscode/
+.idea/
+
+# Virtual Environment
+venv/
+env/
+.venv/
+ENV/
+
+# Docker
+docker-compose.override.yml
+
+# Flask
+instance/
+.webassets-cache
+
+# Logs
+*.log

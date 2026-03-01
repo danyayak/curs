@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <header class="hero">
+        <div class="container">
+            <div class="hero-content">
+                <h1>Будущее уже здесь.<br>iPhone 17 Pro.</h1>
+                <p>Титановый корпус. Чип A19 Pro. Самый мощный iPhone, когда-либо созданный.</p>
+                <a href="/catalog?search=iphone" class="btn btn-primary">Купить сейчас</a>
+                <br>
+                <img src="https://images.unsplash.com/photo-1695048133142-1a20484d2569?auto=format&fit=crop&w=1000&q=80" alt="iPhone 17 Pro" class="hero-image">
+            </div>
+        </div>
+    </header>
+
+    <section class="categories container">
+        <h2 class="section-title">Категории</h2>
+        <div class="cat-grid">
+            <div class="cat-card" onclick="location.href='/catalog?category=smartphone'">
+                <span class="cat-icon">📱</span>
+                <span class="cat-name">Телефоны</span>
+            </div>
+            <div class="cat-card" onclick="location.href='/catalog?category=laptop'">
+                <span class="cat-icon">💻</span>
+                <span class="cat-name">Компьютеры</span>
+            </div>
+            <div class="cat-card" onclick="location.href='/catalog?category=watch'">
+                <span class="cat-icon">⌚</span>
+                <span class="cat-name">Часы</span>
+            </div>
+            <div class="cat-card" onclick="location.href='/catalog?category=audio'">
+                <span class="cat-icon">🎧</span>
+                <span class="cat-name">Наушники</span>
+            </div>
+            <div class="cat-card" onclick="location.href='/catalog?category=camera'">
+                <span class="cat-icon">📷</span>
+                <span class="cat-name">Камеры</span>
+            </div>
+            <div class="cat-card" onclick="location.href='/catalog?category=gaming'">
+                <span class="cat-icon">🎮</span>
+                <span class="cat-name">Гейминг</span>
+            </div>
+        </div>
+    </section>
+
+    <section class="featured" id="catalog">
+        <div class="container">
+            <h2 class="section-title">Новинки 2026</h2>
+            <div class="product-grid">
+                {% for p in novelties %}
+                <div class="product-card">
+                    <a href="/product/{{ p.id }}" class="p-img-wrap" style="display: block; text-decoration: none; color: inherit;">
+                        <img src="{{ p.image_url }}" alt="{{ p.name }}">
+                        {% if 'flagship' in p.tags %}
+                            <div class="badge">Хит</div>
+                        {% elif 'budget' in p.tags %}
+                            <div class="badge" style="background:#10b981">Выгодно</div>
+                        {% else %}
+                             <div class="badge" style="background:#3b82f6">New</div>
+                        {% endif %}
+                    </a>
+                    <div class="p-info">
+                        <a href="/product/{{ p.id }}" class="p-title" style="display: block; text-decoration: none; color: inherit;">
+                            <h3>{{ p.name }}</h3>
+                        </a>
+                        <div class="p-price">{{ "{:,.0f}".format(p.price).replace(',', ' ') }} ₽</div>
+                        <div class="p-actions">
+                            <button class="btn btn-primary btn-sm add-cart-btn" data-name="{{ p.name }}" data-price="{{ p.price }}">В корзину</button>
+                            <button class="wishlist-btn wishlist-toggle-btn" data-id="{{ p.id }}">♡</button>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            <div style="text-align: center; margin-top: 40px;">
+                <a href="/catalog" class="btn btn-secondary">Смотреть все новинки</a>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('.add-cart-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    addToCart(btn.dataset.name, parseFloat(btn.dataset.price));
+                });
+            });
+
+            document.querySelectorAll('.wishlist-toggle-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    // toggleWishlist is defined in base.html
+                    toggleWishlist(btn.dataset.id, btn);
+                });
+            });
+        });
+    </script>
+{% endblock %}

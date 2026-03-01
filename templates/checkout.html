@@ -1,0 +1,184 @@
+{% extends "base.html" %}
+
+{% block title %}Оформление заказа - Айдевайс{% endblock %}
+
+{% block content %}
+<div class="checkout-wrap">
+    <div class="steps">
+        <div class="step active" id="step-ind-1">
+            <div class="step-num">1</div>
+            <span>Доставка</span>
+        </div>
+        <div class="step" id="step-ind-2">
+            <div class="step-num">2</div>
+            <span>Оплата</span>
+        </div>
+        <div class="step" id="step-ind-3">
+            <div class="step-num">3</div>
+            <span>Подтверждение</span>
+        </div>
+    </div>
+
+    <!-- STEP 1: ADDRESS -->
+    <div id="step-1" class="checkout-step">
+        <h2 style="margin-bottom: 30px;">Адрес доставки</h2>
+
+        <!-- Address Selection (Hidden for now as requested "not default") -->
+        <!-- 
+        <div class="address-grid">
+            <div class="addr-card selected">...</div>
+        </div> 
+        -->
+
+        <div class="new-addr-form">
+            <h3 style="margin-bottom: 24px;">Данные получателя</h3>
+            <div class="form-row">
+                <div class="input-group">
+                    <label>Имя</label>
+                    <input type="text" id="addr-name" value="{{ user.username if user else '' }}">
+                </div>
+                <div class="input-group">
+                    <label>Фамилия</label>
+                    <input type="text" id="addr-surname">
+                </div>
+            </div>
+            <div class="input-group">
+                <label>Улица, дом, квартира</label>
+                <input type="text" id="addr-street">
+            </div>
+            <div class="form-row">
+                <div class="input-group">
+                    <label>Город</label>
+                    <input type="text" id="addr-city">
+                </div>
+                <div class="input-group">
+                    <label>Индекс</label>
+                    <input type="text" id="addr-zip">
+                </div>
+            </div>
+            <div class="input-group">
+                <label>Телефон</label>
+                <input type="text" id="addr-phone">
+            </div>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; margin-top: 40px;">
+            <button class="btn btn-primary btn-large" style="width: auto; padding: 16px 60px;" onclick="goToStep(2)">Перейти к оплате</button>
+        </div>
+    </div>
+
+    <!-- STEP 2: PAYMENT -->
+    <div id="step-2" class="checkout-step" style="display: none; opacity: 0; transition: opacity 0.5s;">
+        <h2 style="margin-bottom: 30px;">Оплата картой</h2>
+        
+        <div class="new-addr-form">
+            <div class="card-preview" style="max-width: 400px; margin: 0 auto 30px;">
+                <div style="text-align: right; font-weight: bold;">BANK</div>
+                <div class="card-number-display" id="checkout-card-display">0000 0000 0000 0000</div>
+                <div class="card-meta">
+                    <span>CARD HOLDER</span>
+                    <span>MM/YY</span>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label>Номер карты</label>
+                <input type="text" id="checkout-card-number" placeholder="0000 0000 0000 0000" maxlength="19" oninput="formatCardDisplay(this)">
+            </div>
+            <div style="display: flex; gap: 1rem;">
+                <div class="form-group" style="flex:1">
+                    <label>Срок</label>
+                    <input type="text" placeholder="MM/YY" maxlength="5">
+                </div>
+                <div class="form-group" style="flex:1">
+                    <label>CVC</label>
+                    <input type="text" id="checkout-card-cvc" placeholder="123" maxlength="3">
+                </div>
+            </div>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; margin-top: 40px;">
+            <button class="btn btn-outline btn-large" style="width: auto;" onclick="goToStep(1)">Назад</button>
+            <button class="btn btn-primary btn-large" style="width: auto; padding: 16px 60px;" onclick="submitOrder()">Оплатить заказ</button>
+        </div>
+    </div>
+
+    <!-- STEP 3: SUCCESS -->
+    <div id="step-3" class="checkout-step" style="display: none; text-align: center; padding: 60px 0;">
+        <div style="font-size: 5rem; margin-bottom: 20px;">🎉</div>
+        <h1>Спасибо за заказ!</h1>
+        <p style="color: var(--text-secondary); margin-bottom: 40px;">Ваш заказ успешно оформлен. Мы отправили подтверждение на вашу почту.</p>
+        <button class="btn btn-primary btn-large" onclick="location.href='/profile'">Перейти в профиль</button>
+    </div>
+</div>
+
+<script>
+    function formatCardDisplay(input) {
+        let val = input.value.replace(/\D/g, '');
+        val = val.replace(/(\d{4})(?=\d)/g, '$1 ');
+        input.value = val;
+        document.getElementById('checkout-card-display').innerText = val || '0000 0000 0000 0000';
+    }
+
+    function goToStep(step) {
+        // Simple validation
+        if (step === 2) {
+            if (!document.getElementById('addr-street').value) return alert('Введите адрес');
+        }
+
+        // Hide all steps
+        document.querySelectorAll('.checkout-step').forEach(el => {
+            el.style.opacity = '0';
+            setTimeout(() => el.style.display = 'none', 300);
+        });
+
+        // Show next step
+        setTimeout(() => {
+            const next = document.getElementById('step-' + step);
+            next.style.display = 'block';
+            setTimeout(() => next.style.opacity = '1', 50);
+        }, 300);
+
+        // Update indicators
+        document.querySelectorAll('.step').forEach(el => el.classList.remove('active'));
+        for(let i=1; i<=step; i++) {
+            document.getElementById('step-ind-' + i).classList.add('active');
+        }
+    }
+
+    async function submitOrder() {
+        const cardNum = document.getElementById('checkout-card-number').value;
+        const cvc = document.getElementById('checkout-card-cvc').value;
+        
+        if (cart.length === 0) return alert('Корзина пуста');
+        
+        const total = cart.reduce((sum, item) => sum + item.price, 0);
+        const items = cart.map(i => i.name);
+
+        try {
+            const res = await fetch('/api/checkout', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    card_number: cardNum, 
+                    cvc: cvc,
+                    items: items,
+                    total: total
+                })
+            });
+            const data = await res.json();
+            
+            if (data.success) {
+                cart = [];
+                localStorage.setItem('cart', '[]');
+                updateCartCount();
+                goToStep(3);
+            } else {
+                alert('Ошибка: ' + data.error);
+            }
+        } catch (e) {
+            alert('Ошибка соединения');
+        }
+    }
+</script>
+{% endblock %}

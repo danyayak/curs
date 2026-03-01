@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block title %}Профиль - Айдевайс{% endblock %}
+
+{% block content %}
+<div class="container" style="padding: 60px 20px;">
+    <h1 style="margin-bottom: 40px;">Личный кабинет</h1>
+
+    <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 40px;">
+        <!-- User Info -->
+        <div>
+            <div class="new-addr-form" style="position: sticky; top: 100px;">
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <div style="width: 100px; height: 100px; background: var(--bg-secondary); border-radius: 50%; margin: 0 auto 15px; display: flex; align-items: center; justify-content: center; font-size: 3rem;">👤</div>
+                    <h3>{{ user.username }}</h3>
+                </div>
+                
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="text" value="{{ user.username }}@example.com" readonly style="opacity: 0.7;">
+                </div>
+                <div class="form-group">
+                    <label>Телефон</label>
+                    <input type="text" value="+7 (999) 000-00-00" readonly style="opacity: 0.7;">
+                </div>
+                <div class="form-group">
+                    <label>Адрес доставки</label>
+                    <textarea readonly style="width: 100%; padding: 0.8rem; border: 1px solid var(--border); border-radius: 8px; background: var(--bg-secondary); opacity: 0.7; resize: none;">г. Москва, ул. Пушкина, д. 10, кв. 5</textarea>
+                </div>
+                <button class="btn btn-outline" style="width: 100%; margin-bottom: 10px;">Редактировать профиль</button>
+                <button class="btn" style="width: 100%; background: #ef4444; color: white;" onclick="logout()">Выйти из аккаунта</button>
+            </div>
+        </div>
+
+        <!-- Orders -->
+        <div>
+            <h2 style="margin-bottom: 20px;">История заказов</h2>
+            
+            {% if orders %}
+                <div style="display: flex; flex-direction: column; gap: 20px;">
+                    {% for order in orders %}
+                    <div class="cat-card" style="text-align: left; cursor: default; padding: 24px;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 15px; border-bottom: 1px solid var(--border); padding-bottom: 10px;">
+                            <span style="font-weight: 600;">Заказ #{{ order.id }}</span>
+                            <span style="color: var(--text-secondary);">{{ order.date.strftime('%d.%m.%Y') }}</span>
+                        </div>
+                        <div style="margin-bottom: 15px;">
+                            <div style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 5px;">Товары:</div>
+                            <div style="font-weight: 500;">{{ order.items }}</div>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div style="font-weight: 700; font-size: 1.1rem;">{{ "{:,.0f}".format(order.total).replace(',', ' ') }} ₽</div>
+                            <div class="badge" style="position: static; background: #10b981;">{{ order.status }}</div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div style="text-align: center; padding: 60px; background: var(--bg-secondary); border-radius: 12px;">
+                    <div style="font-size: 3rem; margin-bottom: 10px;">📦</div>
+                    <p style="color: var(--text-secondary);">У вас пока нет заказов.</p>
+                    <a href="/catalog" class="btn btn-primary" style="margin-top: 20px;">Перейти к покупкам</a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

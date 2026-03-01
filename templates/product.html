@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+
+{% block title %}{{ product.name }} - Айдевайс{% endblock %}
+
+{% block content %}
+<div class="container product-detail">
+    <!-- Gallery -->
+    <div class="gallery">
+        <div class="main-image">
+            <img src="{{ product.image_url }}" alt="{{ product.name }}">
+        </div>
+        <!-- Thumbs (using same image for demo) -->
+        <div class="thumbs">
+            <div class="thumb"><img src="{{ product.image_url }}" alt=""></div>
+            <div class="thumb"><img src="{{ product.image_url }}" alt=""></div>
+            <div class="thumb"><img src="{{ product.image_url }}" alt=""></div>
+        </div>
+    </div>
+
+    <!-- Info -->
+    <div class="pd-info">
+        <h1 style="line-height: 1.2;">{{ product.name }}</h1>
+        <div class="pd-price">{{ "{:,.0f}".format(product.price).replace(',', ' ') }} ₽</div>
+        
+        <div class="pd-section">
+            <span class="pd-label">Цвет</span>
+            <div class="color-opts">
+                <div class="color-opt selected" style="background: #5e5e5e;"></div>
+                <div class="color-opt" style="background: #e3e3e3;"></div>
+                <div class="color-opt" style="background: #2e3546;"></div>
+            </div>
+        </div>
+
+        <!-- Render specs icons if available -->
+        <div class="pd-section">
+            <span class="pd-label">Характеристики</span>
+            <div class="specs-grid">
+                {% for key, val in specs.items() %}
+                    {% if key in ['screen', 'cpu', 'camera', 'battery', 'ram', 'ssd', 'gpu', 'anc', 'sensor', 'water'] %}
+                    <div class="spec-item">
+                        <div class="spec-icon">
+                            {% if key == 'screen' %}📱
+                            {% elif key == 'cpu' %}⚡
+                            {% elif key == 'camera' or key == 'sensor' %}📷
+                            {% elif key == 'battery' %}🔋
+                            {% elif key == 'ram' %}💾
+                            {% elif key == 'ssd' %}💽
+                            {% elif key == 'gpu' %}🎮
+                            {% elif key == 'anc' %}🎧
+                            {% elif key == 'water' %}💧
+                            {% else %}⚙️{% endif %}
+                        </div>
+                        <div class="spec-val">{{ val }}</div>
+                    </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+
+        <p style="color: var(--text-secondary); margin-bottom: 30px; line-height: 1.6;">
+            {{ product.description }}
+        </p>
+
+        <div class="pd-actions">
+            <button class="btn btn-primary btn-large add-cart-btn" data-name="{{ product.name }}" data-price="{{ product.price }}">Добавить в корзину</button>
+            <button class="wishlist-btn wishlist-toggle-btn {% if product.id in wishlist_ids %}active{% endif %}" data-id="{{ product.id }}">
+                {% if product.id in wishlist_ids %}❤️{% else %}♡{% endif %}
+            </button>
+        </div>
+        
+        <!-- Detailed specs section -->
+        <div style="margin-top: 60px;">
+             <h3>Подробные характеристики</h3>
+             <table style="width: 100%; margin-top: 20px; border-collapse: collapse;">
+                 {% for key, val in specs.items() %}
+                 <tr style="border-bottom: 1px solid var(--border-light);">
+                     <td style="padding: 15px 0; color: var(--text-secondary); text-transform: capitalize;">{{ key }}</td>
+                     <td style="padding: 15px 0; font-weight: 500;">{{ val }}</td>
+                 </tr>
+                 {% endfor %}
+             </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const addBtn = document.querySelector('.add-cart-btn');
+        if (addBtn) {
+            addBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                addToCart(addBtn.dataset.name, parseFloat(addBtn.dataset.price));
+            });
+        }
+
+        const wishBtn = document.querySelector('.wishlist-toggle-btn');
+        if (wishBtn) {
+            wishBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                toggleWishlist(wishBtn.dataset.id, wishBtn);
+            });
+        }
+    });
+</script>
+
+<script>
+async function toggleWishlist(productId, btn) {
+    try {
+        const response = await fetch('/api/wishlist/toggle', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({product_id: productId})
+        });
+        
+        if (response.status === 401) {
+            openModal('auth-modal');
+            return;
+        }
+        
+        const data = await response.json();
+        if (data.success) {
+            if (data.action === 'added') {
+                btn.classList.add('active');
+                btn.innerHTML = '❤️';
+                btn.style.animation = 'heart-pop 0.3s ease';
+            } else {
+                btn.classList.remove('active');
+                btn.innerHTML = '♡';
+            }
+        }
+    } catch (e) {
+        console.error(e);
+    }
+}
+</script>
+
+<style>
+@keyframes heart-pop {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.3); }
+    100% { transform: scale(1); }
+}
+.wishlist-btn.active {
+    color: #ef4444;
+    border-color: #ef4444;
+}
+</style>
+{% endblock %}

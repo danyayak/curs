@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+
+{% block title %}Каталог - Айдевайс{% endblock %}
+
+{% block content %}
+<div class="container catalog-layout">
+    <!-- Sidebar -->
+    <aside class="filters">
+        <h3>Фильтры</h3>
+        <form id="filter-form" action="/catalog" method="GET">
+            <input type="hidden" name="search" value="{{ request.args.get('search', '') }}">
+            
+            <div class="filter-group">
+                <div class="filter-title">Категория</div>
+                <label class="filter-opt">
+                    <input type="radio" name="category" value="" {% if not active_category %}checked{% endif %} onchange="this.form.submit()"> Все
+                </label>
+                <label class="filter-opt">
+                    <input type="radio" name="category" value="smartphone" {% if active_category == 'smartphone' %}checked{% endif %} onchange="this.form.submit()"> Смартфоны
+                </label>
+                <label class="filter-opt">
+                    <input type="radio" name="category" value="laptop" {% if active_category == 'laptop' %}checked{% endif %} onchange="this.form.submit()"> Ноутбуки
+                </label>
+                <label class="filter-opt">
+                    <input type="radio" name="category" value="watch" {% if active_category == 'watch' %}checked{% endif %} onchange="this.form.submit()"> Часы
+                </label>
+                <label class="filter-opt">
+                    <input type="radio" name="category" value="audio" {% if active_category == 'audio' %}checked{% endif %} onchange="this.form.submit()"> Аудио
+                </label>
+                <label class="filter-opt">
+                    <input type="radio" name="category" value="camera" {% if active_category == 'camera' %}checked{% endif %} onchange="this.form.submit()"> Камеры
+                </label>
+                <label class="filter-opt">
+                    <input type="radio" name="category" value="gaming" {% if active_category == 'gaming' %}checked{% endif %} onchange="this.form.submit()"> Гейминг
+                </label>
+            </div>
+
+            <div class="filter-group">
+                <div class="filter-title">Цена</div>
+                <label class="filter-opt">
+                    <input type="radio" name="max_price" value="50000" {% if request.args.get('max_price') == '50000' %}checked{% endif %} onchange="this.form.submit()"> до 50 000 ₽
+                </label>
+                <label class="filter-opt">
+                    <input type="radio" name="min_price" value="50000" name="max_price" value="100000" disabled> 50 000 - 100 000 ₽ (WIP)
+                </label>
+                <!-- Simplified for now as radio buttons for single select or we need JS for ranges -->
+                 <label class="filter-opt">
+                    <input type="radio" name="max_price" value="" {% if not request.args.get('max_price') %}checked{% endif %} onchange="this.form.submit()"> Любая
+                </label>
+            </div>
+            
+            <input type="hidden" name="sort" id="sort-input" value="{{ request.args.get('sort', '') }}">
+        </form>
+    </aside>
+
+    <!-- Main Content -->
+    <main>
+        <div class="catalog-header">
+            <h2>Все товары</h2>
+            <select class="sort-select" onchange="document.getElementById('sort-input').value=this.value; document.getElementById('filter-form').submit();">
+                <option value="">Сортировка: Популярные</option>
+                <option value="price_asc" {% if request.args.get('sort') == 'price_asc' %}selected{% endif %}>Цена: По возрастанию</option>
+                <option value="price_desc" {% if request.args.get('sort') == 'price_desc' %}selected{% endif %}>Цена: По убыванию</option>
+                <option value="newest" {% if request.args.get('sort') == 'newest' %}selected{% endif %}>Новинки</option>
+            </select>
+        </div>
+
+        <div class="product-grid">
+            {% for p in products %}
+            <div class="product-card">
+                <a href="/product/{{ p.id }}" class="p-img-wrap" style="display: block; text-decoration: none; color: inherit;">
+                    <img src="{{ p.image_url }}" alt="{{ p.name }}">
+                    {% if 'flagship' in p.tags %}
+                        <div class="badge">Хит</div>
+                    {% elif 'budget' in p.tags %}
+                        <div class="badge" style="background:#10b981">Выгодно</div>
+                    {% endif %}
+                </a>
+                <div class="p-info">
+                    <a href="/product/{{ p.id }}" class="p-title" style="display: block; text-decoration: none; color: inherit;">
+                        <h3>{{ p.name }}</h3>
+                    </a>
+                    <div class="p-price">{{ "{:,.0f}".format(p.price).replace(',', ' ') }} ₽</div>
+                    <div class="p-actions">
+                        <button class="btn btn-primary btn-sm add-cart-btn" data-name="{{ p.name }}" data-price="{{ p.price }}">Купить</button>
+                        <button class="wishlist-btn wishlist-toggle-btn {% if p.id in wishlist_ids %}active{% endif %}" data-id="{{ p.id }}">
+                            {% if p.id in wishlist_ids %}❤️{% else %}♡{% endif %}
+                        </button>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        {% if not products %}
+        <div style="text-align: center; padding: 40px; color: var(--text-secondary);">
+            Товары не найдены.
+        </div>
+        {% endif %}
+    </main>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        document.querySelectorAll('.add-cart-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                addToCart(btn.dataset.name, parseFloat(btn.dataset.price));
+            });
+        });
+
+        document.querySelectorAll('.wishlist-toggle-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                toggleWishlist(btn.dataset.id, btn);
+            });
+        });
+    });
+</script>
+
+<script>
+async function toggleWishlist(productId, btn) {
+    try {
+        const response = await fetch('/api/wishlist/toggle', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({product_id: productId})
+        });
+        
+        if (response.status === 401) {
+            openModal('auth-modal');
+            return;
+        }
+        
+        const data = await response.json();
+        if (data.success) {
+            if (data.action === 'added') {
+                btn.classList.add('active');
+                btn.innerHTML = '❤️';
+                btn.style.animation = 'heart-pop 0.3s ease';
+            } else {
+                btn.classList.remove('active');
+                btn.innerHTML = '♡';
+            }
+        }
+    } catch (e) {
+        console.error(e);
+    }
+}
+</script>
+
+<style>
+@keyframes heart-pop {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.3); }
+    100% { transform: scale(1); }
+}
+.wishlist-btn.active {
+    color: #ef4444;
+    border-color: #ef4444;
+}
+</style>
+{% endblock %}
